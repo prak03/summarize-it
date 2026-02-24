@@ -12,30 +12,33 @@ let chats = {};
 const API = "/api/chats";
 
 async function fetchAllChats() {
-  const res = await fetch(API);
+  const res = await fetch(`${API}/get-chats`);
   if (!res.ok) throw new Error("Failed to load chats");
   const data = await res.json();
-  return typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
+  const list = Array.isArray(data) ? data : [];
+  return list.reduce((acc, chat) => {
+    const id = chat.id || chat.chat_id;
+    if (id) acc[id] = chat;
+    return acc;
+  }, {});
 }
 
 async function fetchChat(chatId) {
-  const res = await fetch(`${API}/${encodeURIComponent(chatId)}`);
+  const res = await fetch(`${API}/get-chat/${encodeURIComponent(chatId)}`);
   if (!res.ok) return null;
-  return res.json();
+  const data = await res.json();
+  return Array.isArray(data) && data.length > 0 ? data[0] : null;
 }
 
 async function createChat(text) {
-  const res = await fetch(API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
+  const params = new URLSearchParams({ prompt: text });
+  const res = await fetch(`${API}/create-chat?${params}`, { method: "POST" });
   if (!res.ok) throw new Error("Failed to create chat");
   return res.json();
 }
 
 async function deleteChat(chatId) {
-  const res = await fetch(`${API}/${encodeURIComponent(chatId)}`, { method: "DELETE" });
+  const res = await fetch(`${API}/delete-chat/${encodeURIComponent(chatId)}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete chat");
 }
 

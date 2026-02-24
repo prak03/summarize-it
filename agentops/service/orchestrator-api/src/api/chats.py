@@ -1,6 +1,5 @@
 
 from fastapi import APIRouter, HTTPException
-from models.models import CreateChatBody, UpdateChatBody, Chat
 from fastapi import Depends
 from deps import get_chat_service
 from services.chat_service import ChatService
@@ -17,30 +16,11 @@ def get_chats(chat_service: ChatService = Depends(get_chat_service)):
 
 @router.get("/get-chat/{chat_id}")
 def get_chat(chat_id: str, chat_service: ChatService = Depends(get_chat_service)):
-    c = chat_service.get_chats(chat_id)
-    print(c)
-    return c
+    return chat_service.get_chats(chat_id)
 
-
-'''
-@router.patch("/update-chat/{chat_id}")
-def update_chat(chat_id: str, body: UpdateChatBody):
-    text = (body.text or "").strip()
-    now = datetime.utcnow()
-    chat = temp_db.get(chat_id)
-    if chat:
-        chat.messages.append(text)
-        chat.updated_at = now
-        return chat
-    else:
-        raise HTTPException(status_code=404, detail="Chat not found")
 
 @router.delete("/delete-chat/{chat_id}")
-def delete_chat(chat_id: str):
-    chat = temp_db.get(chat_id)
-    if chat:
-        del temp_db[chat_id]
+def delete_chat(chat_id: str, chat_service: ChatService = Depends(get_chat_service)):
+    if chat_service.delete_chat(chat_id):
         return {"message": "Chat deleted"}
-    else:
-        raise HTTPException(status_code=404, detail="Chat not found")
-'''
+    raise HTTPException(status_code=404, detail="Chat not found")

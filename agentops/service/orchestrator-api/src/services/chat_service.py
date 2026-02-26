@@ -1,8 +1,9 @@
 from repository.chat_repository import ChatRepository
-import uuid
+import uuid, json
 from datetime import datetime
 from models.models import Chat
 from typing import Optional
+from models.chat_model import ChatModel
 
 class ChatService: 
     def __init__(self, repo: ChatRepository):
@@ -11,18 +12,27 @@ class ChatService:
     def create_chat(self, prompt: str):
         chat_id = f"id_{uuid.uuid4()}"
         text = (prompt or "").strip()
-        now = datetime.utcnow()
-        chat = Chat(id=chat_id, created_at=now, updated_at=now, messages=[text])
-        return self.repo.create_chat_repo(chat, chat_id)
+        chat = ChatModel(
+            id=chat_id,
+            summary="",                     
+            messages=[text],    
+            created_at=datetime.utcnow(),    
+            updated_at=datetime.utcnow(),   
+        )
+        return self.repo.create_chat_repo(chat)
 
     def get_chats(self, chat_id: Optional[str] = None):
         if chat_id:
             return self.repo.get_chats_repo(chat_id)
         return self.repo.get_chats_repo()
 
-    def update_chat(self, chat_id: str, chat: Chat):
-        self.repo.store[chat_id] = chat
-        return chat
+    def update_chat(self, chat_id: str, new_message: str):
+        existing = self.repo.get_chats_repo(chat_id)
+        if not existing:
+            return None
+        existing.messages.append(new_message)
+        existing.updated_at = datetime.utcnow()
+        return self.repo.update_chat_repo(existing)
 
     def delete_chat(self, chat_id: str) -> bool:
         return self.repo.delete_chat_repo(chat_id)

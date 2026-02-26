@@ -37,6 +37,13 @@ async function createChat(text) {
   return res.json();
 }
 
+async function updateChat(chatId, message) {
+  const params = new URLSearchParams({ message });
+  const res = await fetch(`${API}/update-chat/${encodeURIComponent(chatId)}?${params}`, { method: "POST" });
+  if (!res.ok) throw new Error("Failed to update chat");
+  return res.json();
+}
+
 async function deleteChat(chatId) {
   const res = await fetch(`${API}/delete-chat/${encodeURIComponent(chatId)}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete chat");
@@ -132,22 +139,30 @@ chatInputForm.addEventListener("submit", async (e) => {
   if (!selectedChatId) {
     try {
       const chat = await createChat(text);
-      const id = chat.id || chat.chat_id;
+      const id = chat?.id || chat?.chat_id;
+      if (!id) {
+        console.error("Create response missing id", chat);
+        return;
+      }
       chats[id] = typeof chat.messages !== "undefined" ? chat : { messages: [text] };
       chatInput.value = "";
       selectChat(id);
-      renderChatMessages(getMessages(chats[id]));
+      renderChatList();
     } catch (err) {
       console.error(err);
     }
     return;
   }
 
-  const prev = getMessages(chats[selectedChatId]);
-  const messages = [...prev, text];
-  chats[selectedChatId] = { ...chats[selectedChatId], messages };
-  chatInput.value = "";
-  renderChatMessages(messages);
+  try {
+    const updated = await updateChat(selectedChatId, text);
+    chats[selectedChatId] = typeof updated.messages !== "undefined" ? updated : { ...chats[selectedChatId], messages: [...getMessages(chats[selectedChatId]), text] };
+    chatInput.value = "";
+    renderChatMessages(getMessages(chats[selectedChatId]));
+    renderChatList();
+  } catch (err) {
+    console.error(err);
+  }
 });
 
 btnNewChat.addEventListener("click", () => showPlaceholder());

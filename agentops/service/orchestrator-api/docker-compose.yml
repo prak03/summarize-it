@@ -6,6 +6,10 @@ services:
     container_name: orchestrator-backend
     ports:
       - "8000:8000"
+    volumes:
+      - ./data:/app/data 
+    environment:
+      - SQLITE_DB_FILE=/app/data/app.db
 
   frontend:
     build:

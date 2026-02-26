@@ -1,17 +1,17 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 # Only field the UI sends when creating a chat; everything else is backend-managed
 class CreateChatBody(BaseModel):
     text: str = ""
 
-# Internal shape for a stored chat (id, timestamps set by backend)
 class Chat(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str = ""
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    "prompt : CreateChatBody = {}"
+    summary: str = ""
     messages: list[str] = []
 
 class UpdateChatBody(BaseModel):

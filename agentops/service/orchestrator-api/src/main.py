@@ -2,10 +2,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-from datetime import datetime
 from api.chats import router as chats_router
+from db import init_db
 
 app = FastAPI()
+@app.on_event("startup")
+async def startup_event():
+    init_db()
 
 app.add_middleware(
     CORSMiddleware,
